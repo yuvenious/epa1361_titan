@@ -1,0 +1,753 @@
+{UTF-8}
+vaccinated population=
+	initial value population region 1*vaccinated fraction
+	~	persons
+	~		|
+
+total cost=
+	cost per vaccinated person*vaccinated population
+	~	Euro
+	~		|
+
+cost per vaccinated person=
+	1
+	~	Euro/persons
+	~		|
+
+peak infected fraction R1= INTEG (
+	In HVM fraction infected,
+		infected fraction R1)
+	~	Dmnl
+	~		|
+
+peak infected fraction TIME R1= INTEG (
+	t HVM in 0-t HVM out 0,
+		INITIAL TIME)
+	~	
+	~		|
+
+t HVM out 0=
+	peak infected fraction TIME R1
+	~	
+	~		|
+
+In HVM fraction infected=
+	IF THEN ELSE(infected fraction R1>= peak infected fraction R1,infected fraction R1-infected fraction R1 t min 1\
+		,0)
+	~	Dmnl
+	~	MAX(input to be monitored for ceiling 0-Del,0)   IF THEN ELSE(input to be monitored \
+		for ceiling 0>Highest Value So Far 0,input to be monitored for ceiling \
+		0,Out HVM 0
+		)
+	|
+
+infected fraction R1=
+	infected fraction region 1
+	~	Dmnl
+	~	MAX(FORECAST( ,  ,  , initial Ta price);0)
+	|
+
+t HVM in 0=
+	IF THEN ELSE(infected fraction R1 >= peak infected fraction R1,Time,peak infected fraction TIME R1\
+		)
+	~	
+	~		|
+
+infected fraction R1 t min 1=
+	0
+	~	Dmnl
+	~	infected fraction region 1, 1, infected fraction region 1
+	|
+
+smoothed fdr1=
+	SMOOTH3I( flu deaths region 1, 0.75, 0)
+	~	
+	~		|
+
+observed cfr=
+	deceased population region 1/(deceased population region 1+recovered population region 1\
+		+infected population region 1+1)
+	~	Dmnl
+	~		|
+
+fraction to vaccinate decision=
+	IF THEN ELSE( fatality ratio region 1 >= 0.01 , 0.4, IF THEN ELSE( fatality ratio region 1\
+		 >= 0.001 , 0.4, IF THEN ELSE( fatality ratio region 1 >= 0.0001 ,0.4, 0)))*0
+	~	
+	~		|
+
+vaccination decision action delay=
+	10
+	~	Month
+	~		|
+
+vaccinated fraction=
+	DELAY FIXED( fraction to vaccinate decision, vaccination decision action delay, 0)
+	~	Dmnl
+	~	0+STEP(0.7, 10)
+	|
+
+orchestrated contact rate reduction= WITH LOOKUP (
+	infected fraction region 1,
+		([(0,0)-(1,1)],(0,0),(0.05,0.05),(0.1,0.2),(0.2,0.75),(0.3,0.85),(0.4,0.9),(1,1) ))
+	~	Dmnl
+	~		|
+
+normal immune population fraction region 1=
+	MAX((additional seasonal immune population fraction R1/2) * SIN(Time/2+5) + (2*permanent immune population fraction R1\
+		 
+	+additional seasonal immune population fraction R1
+	)/2,vaccinated fraction)
+	~	Dmnl
+	~	([(0,0)-(60,1)],(0,0.3),(6,0.7),(12,0.3),(18,0.7),(24,0.3),(30,0.7),(36,0.3\
+		),(42,0.7),(48,0.3) )
+	|
+
+contact rate region 1=
+	normal contact rate region 1*impact infected population on contact rate region 1*(1-\
+		orchestrated contact rate reduction*0)
+	~	contacts/person/Month
+	~		|
+
+switch immunity cap=
+	1
+	~	
+	~		|
+
+normal immune population fraction region 2=
+	switch immunity cap*MIN((additional seasonal immune population fraction R2/2) * SIN(\
+		Time/2+1.5) + (2*permanent immune population fraction R2
+	 +additional seasonal immune population fraction R2
+	)/2 , (permanent immune population fraction R1+additional seasonal immune population fraction R1\
+		))+(1-switch immunity cap)*((additional seasonal immune population fraction R2/2) *\
+		 SIN(Time/2+1.5) + (2*permanent immune population fraction R2
+	 +additional seasonal immune population fraction R2
+	)/2)
+	~	Dmnl
+	~	([(0,0)-(60,1)],(0,0.3),(6,0.1),(12,0.3),(18,0.1),(24,0.3),(30,0.1),(36,0.3\
+		),(42,0.1),(48,0.3) )
+	|
+
+initial value susceptible population region 2=
+	initial value population region 2-initial value immune population region 2
+	~	persons
+	~		|
+
+initial immune fraction of the population of region 2=
+	0.33333
+	~	Dmnl
+	~		|
+
+initial value immune population region 1=
+	switch immunity * initial immune fraction of the population of region 1 * initial value population region 1
+	~	persons
+	~	2.7e+008
+	|
+
+permanent immune population fraction R2=
+	0.1
+	~	Dmnl
+	~		|
+
+initial value population region 1=
+	6e+08
+	~	persons
+	~		|
+
+initial immune fraction of the population of region 1=
+	0.45
+	~	Dmnl
+	~		|
+
+initial value susceptible population region 1=
+	initial value population region 1 - initial value immune population region 1
+	~	persons
+	~	3.3e+008
+	|
+
+initial value immune population region 2=
+	switch immunity*initial immune fraction of the population of region 2*initial value population region 2
+	~	persons
+	~		|
+
+recovered population region 1= INTEG (
+	recoveries region 1,
+		0)
+	~	persons
+	~		|
+
+initial value population region 2=
+	3e+09
+	~	persons
+	~		|
+
+additional seasonal immune population fraction R2=
+	0.2
+	~	Dmnl
+	~		|
+
+interregional contact rate=
+	switch regions*normal interregional contact rate
+	~	contacts/person/Month
+	~		|
+
+permanent immune population fraction R1=
+	0.3
+	~	Dmnl
+	~	0 to 0.5
+	|
+
+additional seasonal immune population fraction R1=
+	0.4
+	~	Dmnl
+	~	immune population fraction R1
+	|
+
+root contact ratio region 2=
+	1
+	~	
+	~		|
+
+switch immunity=
+	1
+	~	Dmnl
+	~		|
+
+recoveries region 1=
+	(1-fatality ratio region 1*switch deaths)*infected population region 1/recovery time region 1
+	~	persons/Month
+	~		|
+
+impact infected population on contact rate region 2=
+	1-(infected fraction region 2)^(1/root contact ratio region 2)
+	~	Dmnl
+	~	([(0,0)-(1,1)],(0,1),(0.1,0.5),(0.2,0.25),(0.3,0.125),(0.4,0.0625),(0.5,0.0\
+		3125),(1,0) )
+	|
+
+switch deaths=
+	1
+	~	Dmnl
+	~		|
+
+flu deaths region 1=
+	fatality ratio region 1*switch deaths*infected population region 1/recovery time region 1
+	~	persons/Month
+	~		|
+
+flu deaths region 2=
+	fatality rate region 2*switch deaths*infected population region 2/recovery time region 2
+	~	persons/Month
+	~		|
+
+total number of deaths=
+	deceased population region 1+deceased population region 2
+	~	persons
+	~		|
+
+recoveries region 2=
+	(1-fatality rate region 2*switch deaths)*infected population region 2/recovery time region 2
+	~	persons/Month
+	~		|
+
+switch regions=
+	1
+	~	
+	~		|
+
+root contact rate region 1=
+	1.5
+	~	Dmnl
+	~		|
+
+susceptible to immune population flow region 2=
+	MAX( MIN((normal immune population region 2-immune population region 2)/susceptible to immune population delay time region 2
+	, susceptible population region 2/susceptible to immune population delay time region 2\
+		), -(immune population region 2/susceptible to immune population delay time region 2
+	))*switch immunity
+	~	persons/Month
+	~		|
+
+susceptible to immune population flow region 1=
+	MAX( MIN((normal immune population region 1-immune population region 1)/susceptible to immune population delay time region 1
+	, susceptible population region 1/susceptible to immune population delay time region 1\
+		), -(immune population region 1/susceptible to immune population delay time region 1
+	))*switch immunity
+	~	persons/Month
+	~		|
+
+normal interregional contact rate=
+	0.1
+	~	contacts/person/Month
+	~		|
+
+contact rate region 2=
+	normal contact rate region 2*impact infected population on contact rate region 2
+	~	contacts/person/Month
+	~		|
+
+deceased population region 1= INTEG (
+	flu deaths region 1,
+		0)
+	~	persons
+	~		|
+
+deceased population region 2= INTEG (
+	flu deaths region 2,
+		0)
+	~	persons
+	~		|
+
+fatality ratio region 1=
+	0.001
+	~	Dmnl
+	~		|
+
+fatality rate region 2=
+	0.002
+	~	Dmnl
+	~		|
+
+infected population region 1= INTEG (
+	infections region 1-flu deaths region 1-recoveries region 1,
+		initial value infected population region 1)
+	~	persons
+	~		|
+
+infected population region 2= INTEG (
+	infections region 2-flu deaths region 2-recoveries region 2,
+		initial value infected population region 2)
+	~	persons
+	~		|
+
+impact infected population on contact rate region 1=
+	1-(infected fraction region 1)^(1/root contact rate region 1)
+	~	Dmnl
+	~	([(0,0)-(1,1)],(0,1),(0.1,0.5),(0.2,0.25),(0.3,0.125),(0.4,0.0625),(0.5,0.0\
+		3125),(1,0) )
+	|
+
+normal contact rate region 2=
+	55
+	~	contacts/person/Month
+	~		|
+
+recovery time region 2=
+	0.5
+	~	Month
+	~		|
+
+normal contact rate region 1=
+	40
+	~	contacts/person/Month
+	~		|
+
+infections region 2=
+	susceptible population region 2*contact rate region 2*infection rate region 2*infected fraction region 2\
+		 + susceptible population region 2*interregional contact rate*infection rate region 2\
+		*infected fraction region 1
+	~	persons/Month
+	~		|
+
+initial value infected population region 1=
+	0
+	~	persons
+	~		|
+
+initial value infected population region 2=
+	10
+	~	persons
+	~		|
+
+normal immune population region 2=
+	normal immune population fraction region 2*total population region 2
+	~	persons
+	~		|
+
+susceptible to immune population delay time region 2=
+	1
+	~	Month
+	~		|
+
+infected fraction region 1=
+	infected population region 1/total population region 1
+	~	Dmnl
+	~		|
+
+infected fraction region 2=
+	infected population region 2/total population region 2
+	~	Dmnl
+	~		|
+
+infection ratio region 1=
+	0.1
+	~	persons/contacts
+	~		|
+
+infection rate region 2=
+	0.15
+	~	persons/contacts
+	~		|
+
+total population region 1=
+	infected population region 1+recovered population region 1+susceptible population region 1\
+		+immune population region 1
+	~	persons
+	~		|
+
+total population region 2=
+	infected population region 2+recovered population region 2+susceptible population region 2\
+		+immune population region 2
+	~	persons
+	~		|
+
+recovered population region 2= INTEG (
+	recoveries region 2,
+		0)
+	~	persons
+	~		|
+
+susceptible population region 1= INTEG (
+	-infections region 1-susceptible to immune population flow region 1,
+		initial value susceptible population region 1)
+	~	persons
+	~		|
+
+susceptible population region 2= INTEG (
+	-infections region 2-susceptible to immune population flow region 2,
+		initial value susceptible population region 2)
+	~	persons
+	~		|
+
+infections region 1=
+	susceptible population region 1*contact rate region 1*infection ratio region 1*infected fraction region 1\
+		 + susceptible population region 1*interregional contact rate*infection ratio region 1\
+		*infected fraction region 2
+	~	persons/Month
+	~		|
+
+susceptible to immune population delay time region 1=
+	1
+	~	Month
+	~		|
+
+immune population region 1= INTEG (
+	susceptible to immune population flow region 1,
+		initial value immune population region 1)
+	~	persons
+	~		|
+
+immune population region 2= INTEG (
+	susceptible to immune population flow region 2,
+		initial value immune population region 2)
+	~	persons
+	~		|
+
+normal immune population region 1=
+	normal immune population fraction region 1*total population region 1
+	~	persons
+	~		|
+
+recovery time region 1=
+	0.5
+	~	Month
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 48
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.0625
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0
+10,1,susceptible population region 1,732,575,42,23,3,131,0,16,0,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+10,2,infected population region 1,966,573,44,23,3,131,0,16,0,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+10,3,recovered population region 1,1185,571,36,23,3,131,0,16,0,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+1,4,6,2,4,0,0,22,0,0,0,-1--1--1,,1|(890,573)|
+1,5,6,1,100,0,0,22,0,0,0,-1--1--1,,1|(810,573)|
+11,6,508,853,573,6,8,34,3,0,0,1,0,0,0
+10,7,infections region 1,853,600,34,19,40,3,0,16,-1,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+1,8,10,3,4,0,0,22,0,0,0,-1--1--1,,1|(1120,569)|
+1,9,10,2,100,0,0,22,0,0,0,-1--1--1,,1|(1045,569)|
+11,10,1452,1086,569,6,8,34,3,0,0,1,0,0,0
+10,11,recoveries region 1,1086,596,37,19,40,3,0,16,-1,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+1,12,1,7,1,0,0,0,0,64,0,-1--1--1,,1|(775,596)|
+10,13,contact rate region 1,844,513,42,19,8,3,0,16,0,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+10,14,infection ratio region 1,746,642,49,19,8,3,0,18,0,0,0,0,0-0-0,0-0-0,|12|B|255-128-0
+1,15,13,6,1,0,0,0,0,64,0,-1--1--1,,1|(845,539)|
+10,16,total population region 1,915,216,55,19,8,3,0,16,0,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+1,17,1,16,1,0,0,0,0,64,0,-1--1--1,,1|(801,371)|
+1,18,2,16,1,0,0,0,0,64,0,-1--1--1,,1|(1129,408)|
+1,19,3,16,1,0,0,0,0,64,0,-1--1--1,,1|(1172,310)|
+1,20,2,10,1,0,0,0,0,64,0,-1--1--1,,1|(992,556)|
+10,21,recovery time region 1,1061,631,78,11,8,131,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,22,21,11,0,0,0,0,0,64,0,-1--1--1,,1|(1065,622)|
+10,23,susceptible population region 2,742,907,40,20,3,3,0,0,0,0,0,0
+10,24,infected population region 2,968,908,53,23,3,131,0,0,0,0,0,0
+10,25,recovered population region 2,1194,906,41,22,3,131,0,0,0,0,0,0
+1,26,28,24,4,0,0,22,0,0,0,-1--1--1,,1|(887,904)|
+1,27,28,23,100,0,0,22,0,0,0,-1--1--1,,1|(814,904)|
+11,28,1580,853,904,6,8,34,3,0,0,1,0,0,0
+10,29,infections region 2,853,923,57,11,40,3,0,0,-1,0,0,0
+1,30,32,25,4,0,0,22,0,0,0,-1--1--1,,1|(1122,903)|
+1,31,32,24,100,0,0,22,0,0,0,-1--1--1,,1|(1050,903)|
+11,32,1484,1086,903,6,8,34,3,0,0,1,0,0,0
+10,33,recoveries region 2,1086,922,60,11,40,3,0,0,-1,0,0,0
+1,34,23,29,1,0,0,0,0,64,0,-1--1--1,,1|(787,941)|
+1,35,24,50,1,0,0,0,0,64,0,-1--1--1,,1|(1090,1017)|
+10,36,contact rate region 2,875,975,38,19,8,3,0,0,0,0,0,0
+10,37,infection rate region 2,754,847,41,19,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,38,37,28,0,0,0,0,0,64,0,-1--1--1,,1|(810,879)|
+1,39,36,29,0,0,0,0,0,64,0,-1--1--1,,1|(864,951)|
+10,40,total population region 2,951,1215,49,19,8,3,0,0,0,0,0,0
+1,41,23,40,1,0,0,0,0,64,0,-1--1--1,,1|(775,1034)|
+1,42,24,40,1,0,0,0,0,64,0,-1--1--1,,1|(1137,1096)|
+1,43,25,40,1,0,0,0,0,64,0,-1--1--1,,1|(1129,1160)|
+1,44,40,50,1,0,0,0,0,64,0,-1--1--1,,1|(956,1140)|
+1,45,24,32,1,0,0,0,0,64,0,-1--1--1,,1|(1003,888)|
+10,46,infected fraction region 1,911,312,57,19,8,131,0,16,0,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+1,47,16,46,1,0,0,0,0,64,0,-1--1--1,,1|(911,271)|
+1,48,2,46,1,0,0,0,0,64,0,-1--1--1,,1|(1098,406)|
+1,49,46,6,1,0,0,0,0,64,0,-1--1--1,,1|(815,370)|
+10,50,infected fraction region 2,954,1108,51,19,8,3,0,0,0,0,0,0
+1,51,50,29,1,0,0,0,0,64,0,-1--1--1,,1|(809,989)|
+10,52,interregional contact rate,852,716,45,19,8,3,0,16,-1,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+1,53,52,7,0,0,0,0,0,64,0,-1--1--1,,1|(852,665)|
+10,54,immune population region 1,736,371,40,20,3,3,0,16,0,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+1,55,54,16,1,0,0,0,3,64,0,0-0-255,|12||0-0-0,1|(813,280)|
+1,56,58,54,4,0,0,22,0,0,0,-1--1--1,,1|(735,444)|
+1,57,58,1,100,0,0,22,0,0,0,-1--1--1,,1|(735,530)|
+11,58,1372,735,503,8,6,33,3,0,0,2,0,0,0
+10,59,susceptible to immune population flow region 1,644,503,83,19,40,131,0,16,-1,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+10,60,immune population region 2,741,1098,40,20,3,3,0,0,0,0,0,0
+1,61,63,60,4,0,0,22,0,0,0,-1--1--1,,1|(738,1041)|
+1,62,63,23,100,0,0,22,0,0,0,-1--1--1,,1|(738,959)|
+11,63,1292,738,998,8,6,33,3,0,0,2,0,0,0
+10,64,susceptible to immune population flow region 2,653,998,77,19,40,3,0,0,-1,0,0,0
+1,65,60,40,1,0,0,0,0,64,0,-1--1--1,,1|(864,1174)|
+10,66,normal immune population fraction region 1,533,288,58,27,8,131,0,0,0,0,0,0
+1,67,54,59,1,0,0,0,0,64,0,-1--1--1,,1|(683,441)|
+10,68,normal immune population region 1,702,291,67,19,8,131,0,16,0,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+1,69,16,68,1,0,0,0,0,64,0,-1--1--1,,1|(814,220)|
+1,70,68,59,1,0,0,0,0,64,0,-1--1--1,,1|(646,392)|
+10,71,susceptible to immune population delay time region 1,551,444,70,28,8,3,0,2,-1,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,72,71,59,0,0,0,0,0,64,0,-1--1--1,,1|(598,474)|
+10,73,Time,419,239,26,11,8,2,1,1,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,74,73,66,0,1,0,0,0,64,0,-1--1--1,,1|(453,253)|
+1,75,1,59,1,0,0,0,0,64,0,-1--1--1,,1|(676,554)|
+10,76,normal immune population fraction region 2,551,1181,59,28,8,3,0,0,0,0,0,0
+10,77,normal immune population region 2,729,1181,61,19,8,3,0,0,0,0,0,0
+10,78,susceptible to immune population delay time region 2,553,1066,70,28,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,79,78,64,0,0,0,0,0,64,0,-1--1--1,,1|(603,1031)|
+1,80,23,64,1,0,0,0,0,64,0,-1--1--1,,1|(697,940)|
+1,81,60,64,1,0,0,0,0,64,0,-1--1--1,,1|(686,1046)|
+1,82,77,64,1,0,0,0,0,64,0,-1--1--1,,1|(666,1113)|
+1,83,40,77,1,0,0,0,0,64,0,-1--1--1,,1|(878,1217)|
+10,84,Time,493,1122,26,11,8,2,0,1,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,85,84,76,1,0,0,0,0,64,0,-1--1--1,,1|(492,1148)|
+1,86,14,7,0,0,0,0,0,64,0,-1--1--1,,1|(800,620)|
+10,87,initial value susceptible population region 1,468,510,71,19,8,3,1,0,0,0,0,0
+10,88,initial value immune population region 1,465,592,61,19,8,3,1,0,0,0,0,0
+10,89,initial value infected population region 1,274,707,61,19,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,90,87,1,0,0,0,0,0,64,1,-1--1--1,,1|(607,543)|
+1,91,88,54,0,0,0,0,0,64,1,-1--1--1,,1|(594,486)|
+10,92,initial value susceptible population region 2,461,970,71,19,8,3,0,0,0,0,0,0
+10,93,initial value immune population region 2,460,888,68,19,8,3,0,0,0,0,0,0
+10,94,initial value infected population region 2,277,753,68,19,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,95,92,23,0,0,0,0,0,64,1,-1--1--1,,1|(610,936)|
+1,96,93,60,0,0,0,0,0,64,1,-1--1--1,,1|(593,988)|
+1,97,50,109,0,0,0,0,0,64,0,-1--1--1,,1|(938,1083)|
+10,98,infected fraction region 1,768,781,56,19,8,2,0,1,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,99,98,28,0,0,0,0,0,64,0,-1--1--1,,1|(811,843)|
+10,100,normal contact rate region 1,959,485,52,19,8,131,0,18,0,0,0,0,0-0-0,0-0-0,|12|B|255-128-0
+1,101,100,13,1,0,0,0,0,64,0,-1--1--1,,1|(910,522)|
+10,102,impact infected population on contact rate region 1,872,430,73,30,8,131,0,16,0,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+1,103,46,102,1,0,0,0,0,64,0,-1--1--1,,1|(900,343)|
+1,104,102,13,1,0,0,0,0,64,0,-1--1--1,,1|(862,462)|
+10,105,infected fraction region 2,764,684,62,19,8,2,0,17,-1,0,0,0,128-128-128,0-0-0,|12|B|160-160-160
+1,106,105,7,0,0,0,0,0,64,0,-1--1--1,,1|(802,646)|
+1,107,52,28,0,1,0,0,0,64,0,-1--1--1,,1|(852,809)|
+10,108,normal contact rate region 2,982,957,61,19,8,131,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+10,109,impact infected population on contact rate region 2,916,1048,83,19,8,3,0,0,0,0,0,0
+1,110,109,36,0,0,0,0,0,64,0,-1--1--1,,1|(899,1017)|
+1,111,108,36,0,0,0,0,0,64,0,-1--1--1,,1|(924,966)|
+1,112,113,2,100,0,0,22,0,0,0,-1--1--1,,1|(964,628)|
+11,113,1100,964,667,8,6,33,3,0,0,4,0,0,0
+10,114,flu deaths region 1,1007,667,35,19,40,131,0,16,-1,0,0,0,0-0-0,0-0-0,|12|B|0-0-0
+10,115,fatality ratio region 1,1165,670,37,19,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,116,21,114,0,0,0,0,0,64,0,-1--1--1,,1|(1046,641)|
+1,117,115,11,1,0,0,0,0,64,0,-1--1--1,,1|(1144,621)|
+1,118,115,114,1,0,0,0,0,64,0,-1--1--1,,1|(1090,681)|
+1,119,2,113,1,0,0,0,0,64,0,-1--1--1,,1|(946,632)|
+1,120,89,2,0,0,0,0,0,64,1,-1--1--1,,1|(621,639)|
+10,121,deceased population region 1,965,720,42,23,3,131,0,20,0,0,0,0,0-0-0,0-255-0,|12|B|0-0-0
+1,122,113,121,4,0,0,22,0,0,0,-1--1--1,,1|(964,685)|
+10,123,deceased population region 2,965,770,41,23,3,131,0,0,0,0,0,0
+1,124,126,123,4,0,0,22,0,0,0,-1--1--1,,1|(972,803)|
+1,125,126,24,100,0,0,22,0,0,0,-1--1--1,,1|(972,855)|
+11,126,1212,972,819,8,6,33,3,0,0,4,0,0,0
+10,127,flu deaths region 2,1016,819,36,17,40,131,0,0,-1,0,0,0
+10,128,fatality rate region 2,1043,861,35,19,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,129,24,126,1,0,0,0,0,64,0,-1--1--1,,1|(947,863)|
+1,130,94,24,0,0,0,0,0,64,1,-1--1--1,,1|(623,830)|
+1,131,128,32,1,0,0,0,0,64,0,-1--1--1,,1|(1067,880)|
+1,132,128,127,0,0,0,0,0,64,0,-1--1--1,,1|(1032,844)|
+10,133,recovery time region 2,1130,831,51,25,8,131,0,2,-1,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,134,133,127,0,0,0,0,0,64,0,-1--1--1,,1|(1072,825)|
+1,135,133,32,0,0,0,0,0,64,0,-1--1--1,,1|(1105,870)|
+10,136,total number of deaths,1078,741,48,19,8,3,1,0,0,0,0,0
+1,137,121,136,0,1,0,0,0,64,0,-1--1--1,,1|(1011,728)|
+1,138,123,136,0,1,0,0,0,64,0,-1--1--1,,1|(1011,758)|
+10,139,switch immunity,436,743,60,11,8,131,1,6,0,0,0,0,0-0-0,255-255-0,|12||128-192-255
+10,140,switch regions,649,716,51,12,8,131,1,6,0,0,0,0,0-0-0,255-255-0,|12||128-192-255
+10,141,switch deaths,1218,740,43,11,8,3,1,6,0,0,0,0,0-0-0,255-255-0,|12||128-192-255
+1,142,141,11,1,1,0,0,1,64,0,128-192-255,|12||0-0-0,1|(1160,613)|
+1,143,141,114,1,1,0,0,1,64,0,128-192-255,|12||0-0-0,1|(1093,727)|
+1,144,141,127,1,1,0,0,1,64,0,128-192-255,|12||0-0-0,1|(1109,757)|
+1,145,141,32,1,1,0,0,1,64,0,128-192-255,|12||0-0-0,1|(1179,863)|
+1,146,139,59,0,1,0,0,1,64,0,128-192-255,|12||0-0-0,1|(531,632)|
+1,147,139,64,0,1,0,0,1,64,0,128-192-255,|12||0-0-0,1|(535,861)|
+1,148,140,52,0,1,0,0,1,64,0,128-192-255,|12||0-0-0,1|(746,716)|
+10,149,normal interregional contact rate,650,752,62,19,8,3,1,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,150,149,52,0,1,0,0,0,64,0,-1--1--1,,1|(752,733)|
+10,151,root contact rate region 1,960,365,58,19,8,131,0,18,0,0,0,0,0-0-0,0-0-0,|12|B|255-128-0
+1,152,151,102,0,0,0,0,0,64,0,-1--1--1,,1|(929,388)|
+10,153,root contact ratio region 2,1025,1002,55,19,8,131,0,2,-1,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,154,153,109,0,0,0,0,0,64,0,-1--1--1,,1|(976,1022)|
+1,155,76,77,0,0,0,0,0,64,0,-1--1--1,,1|(631,1181)|
+10,156,permanent immune population fraction R2,401,1211,71,19,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+10,157,additional seasonal immune population fraction R2,296,1157,60,28,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+10,158,additional seasonal immune population fraction R1,391,349,60,28,8,3,1,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+10,159,permanent immune population fraction R1,366,284,71,19,8,3,1,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,160,159,66,0,1,0,0,0,64,0,-1--1--1,,1|(449,285)|
+1,161,158,66,0,1,0,0,0,64,0,-1--1--1,,1|(456,321)|
+1,162,156,76,0,0,0,0,0,64,0,-1--1--1,,1|(475,1196)|
+1,163,157,76,1,0,0,0,0,64,0,-1--1--1,,1|(414,1183)|
+10,164,initial value population region 2,287,932,61,19,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+10,165,initial immune fraction of the population of region 2,298,822,81,19,8,3,0,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,166,139,93,0,1,0,0,1,64,0,128-192-255,|12||0-0-0,1|(445,804)|
+1,167,165,93,0,0,0,0,0,64,0,-1--1--1,,1|(372,852)|
+1,168,164,93,0,0,0,0,0,64,0,-1--1--1,,1|(363,912)|
+1,169,164,92,0,0,0,0,0,64,0,-1--1--1,,1|(362,948)|
+1,170,139,88,0,1,0,0,1,64,0,128-192-255,|12||0-0-0,1|(448,678)|
+10,171,initial immune fraction of the population of region 1,294,639,81,19,8,3,1,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+10,172,initial value population region 1,273,565,61,19,8,3,1,2,0,0,0,0,0-0-0,0-0-0,|12||255-128-0
+1,173,171,88,0,1,0,0,0,64,0,-1--1--1,,1|(376,615)|
+1,174,172,88,0,1,0,0,0,64,0,-1--1--1,,1|(362,577)|
+1,175,172,87,0,1,0,0,0,64,0,-1--1--1,,1|(360,540)|
+1,176,88,87,0,1,0,0,0,64,0,-1--1--1,,1|(465,557)|
+1,177,93,92,0,0,0,0,0,64,0,-1--1--1,,1|(460,922)|
+1,178,159,76,1,1,0,1,3,64,0,128-192-255,|12||0-0-0,1|(114,689)|
+1,179,158,76,1,1,0,1,3,64,0,128-192-255,|12||0-0-0,1|(148,720)|
+10,180,switch immunity cap,365,1050,76,12,8,131,0,6,0,0,0,0,0-0-0,255-255-0,|12||128-192-255
+1,181,180,76,1,0,0,0,1,64,0,128-192-255,|12||0-0-0,1|(419,1127)|
+10,182,vaccinated fraction,769,177,72,11,8,131,1,2,0,0,0,0,0-0-0,0-255-0,|12||0-255-0
+1,183,182,66,1,1,0,0,3,64,0,0-255-0,|12||0-0-0,1|(653,206)|
+10,184,orchestrated contact rate reduction,1046,428,52,24,8,131,1,18,0,0,0,0,0-0-0,0-255-0,|12|B|0-255-0
+1,185,184,13,1,1,0,0,1,64,0,0-255-0,|12||0-0-0,1|(988,527)|
+1,186,46,184,1,1,0,0,1,64,0,0-255-0,|12||0-0-0,1|(1043,383)|
+10,187,fraction to vaccinate decision,1084,166,104,11,8,131,1,2,0,0,0,0,0-0-0,0-0-0,|12||0-255-0
+1,188,187,182,1,1,0,0,1,64,0,0-255-0,|12||0-0-0,1|(898,143)|
+10,189,vaccination decision action delay,484,178,109,16,8,131,1,2,0,0,0,0,0-0-0,0-0-0,|12||0-255-0
+1,190,189,182,0,1,0,0,1,64,0,0-255-0,|12||0-0-0,1|(638,177)|
+1,191,115,187,1,1,0,0,1,64,0,0-255-0,|12||0-0-0,1|(1306,457)|
+1,192,66,68,0,0,0,0,0,64,0,-1--1--1,,1|(605,289)|
+10,193,observed cfr,1282,671,40,11,8,3,1,0,0,0,0,0
+1,194,121,193,0,1,0,0,0,64,0,-1--1--1,,1|(1117,696)|
+1,195,3,193,0,1,0,0,0,64,0,-1--1--1,,1|(1234,621)|
+1,196,2,193,0,1,0,0,0,64,0,-1--1--1,,1|(1121,620)|
+10,197,smoothed fdr1,1326,490,46,11,8,3,1,0,0,0,0,0
+1,198,114,197,0,1,0,0,0,64,0,-1--1--1,,1|(1167,577)|
+10,199,peak infected fraction R1,1608,284,58,20,3,131,0,5,0,0,0,0,64-160-98,0-255-0,|12||255-0-0
+12,200,48,1425,284,10,8,0,3,0,1,-1,0,0,0,255-0-0,0-0-0,|12||255-0-0
+1,201,203,199,4,0,0,22,0,0,0,-1--1--1,,1|(1519,285)|
+1,202,203,200,100,0,0,22,0,0,0,-1--1--1,,1|(1456,285)|
+11,203,48,1483,285,6,8,34,3,0,0,1,0,0,0
+10,204,In HVM fraction infected,1483,312,54,19,40,3,0,1,-1,0,0,0,255-0-0,0-0-0,|12||255-0-0
+10,205,infected fraction R1,1295,272,51,19,8,3,0,0,-1,0,0,0
+10,206,Time,1483,155,26,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+10,207,peak infected fraction TIME R1,1612,199,62,26,3,131,0,5,0,0,0,0,0-128-0,0-255-0,|12||0-0-0
+12,208,48,1422,202,10,8,0,3,0,0,-1,0,0,0
+1,209,211,207,4,0,0,22,0,0,0,-1--1--1,,1|(1515,200)|
+1,210,211,208,100,0,0,22,0,0,0,-1--1--1,,1|(1450,200)|
+11,211,48,1475,200,6,8,34,3,0,0,1,0,0,0
+10,212,t HVM in 0,1475,219,37,11,40,3,0,0,-1,0,0,0
+12,213,48,1785,200,10,8,0,3,0,0,-1,0,0,0
+1,214,216,213,4,0,0,22,0,0,0,-1--1--1,,1|(1761,202)|
+1,215,216,207,100,0,0,22,0,0,0,-1--1--1,,1|(1705,202)|
+11,216,48,1742,202,6,8,34,3,0,0,1,0,0,0
+10,217,t HVM out 0,1742,221,42,11,40,3,0,0,-1,0,0,0
+1,218,207,212,1,0,0,0,0,64,0,-1--1--1,,1|(1543,212)|
+1,219,206,211,0,0,0,0,0,64,0,-1--1--1,,1|(1480,173)|
+1,220,205,212,0,0,0,0,0,64,0,-1--1--1,,1|(1385,245)|
+1,221,199,212,0,0,0,0,0,64,0,-1--1--1,,1|(1538,250)|
+1,222,205,204,0,0,0,0,0,64,0,-1--1--1,,1|(1380,289)|
+1,223,205,199,0,0,0,0,0,64,1,-1--1--1,,1|(1441,276)|
+10,224,infected fraction R1 t min 1,1289,319,51,19,8,3,0,0,0,0,0,0
+1,225,224,204,0,0,0,0,0,64,0,-1--1--1,,1|(1377,315)|
+1,226,199,204,1,0,0,0,0,64,0,-1--1--1,,1|(1550,310)|
+1,227,46,205,0,0,0,0,0,64,0,-1--1--1,,1|(1099,292)|
+1,228,207,216,1,0,0,0,0,64,0,-1--1--1,,1|(1694,181)|
+10,229,vaccinated population,274,87,34,19,8,3,0,0,0,0,0,0
+10,230,cost per vaccinated person,668,87,62,19,8,3,0,0,0,0,0,0
+10,231,total cost,481,88,47,21,8,131,0,4,0,0,0,0,0-0-0,0-255-0,|12||0-0-0
+1,232,182,229,0,0,0,0,0,64,0,-1--1--1,,1|(515,130)|
+1,233,172,229,0,0,0,0,0,64,0,-1--1--1,,1|(273,333)|
+1,234,230,231,0,0,0,0,0,64,0,-1--1--1,,1|(574,87)|
+1,235,229,231,0,0,0,0,0,64,0,-1--1--1,,1|(364,87)|
+10,236,INITIAL TIME,1612,244,60,11,8,2,17,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,237,236,207,0,17,0,0,0,64,1,-1--1--1,,1|(1612,236)|
+///---\\\
+:L<%^E!@
+9:basecase
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+18:FluLH1.vsc
+20:FluLH1.lst
+15:0,0,0,5,0,0
+19:100,0
+27:2,
+34:0,
+4:Time
+5:infected fraction R1
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+42:0
+24:0
+25:48
+26:48
