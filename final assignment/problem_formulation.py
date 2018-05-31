@@ -31,7 +31,7 @@ def get_model_for_problem_formulation(problem_formulation_id):
     cat_uncert_loc = {'Brate' : (0.9, 1.5, 1000)}      # breach growth rate [m/day]
     
     cat_uncert = {'discount rate': (1.5, 2.5, 3.5, 4.5)}
-    Int_uncert = {'A.0_ID flood wave shape': [0, 133]}
+    Int_uncert = {'A.0_ID flood wave shape': [0, 132]}
     
     # Range of dike heightening:
     dike_lev = {'DikeIncrease': [0, 10]}     # dm
@@ -93,20 +93,28 @@ def get_model_for_problem_formulation(problem_formulation_id):
     if problem_formulation_id == 0:
         dikes_variable_names = []
         
-        for dike in function.dikelist:    
-          dikes_variable_names.extend(
-             ['{}_{}'.format(dike, e) for e in ['Expected Annual Damage', 
-                                                'Dike Investment Costs']])
+        for dike in function.dikelist:
+            dikes_variable_names.extend(
+                ['{}_{}'.format(dike, e)
+                 for e in ['Expected Annual Damage', 'Dike Investment Costs']])
+            
         dikes_variable_names.extend(['RfR Total Costs'])
         dikes_variable_names.extend(['Expected Evacuation Costs'])
           
         dike_model.outcomes = [ScalarOutcome('All Costs',
-                               variable_name=[var for var in dikes_variable_names], 
-                               function=sum_over, kind=direction),
-        
+                                             variable_name = [var for var in dikes_variable_names],
+                                             function = sum_over,
+                                             kind = direction),
+                               
+#                                ScalarOutcome('test',
+#                                              variable_name = dikes_variable_names[0],
+#                                              kind = direction),                               
+                               
                                ScalarOutcome('Expected Number of Deaths', 
-                               variable_name=['{}_Expected Number of Deaths'.format(dike) 
-                         for dike in function.dikelist], function=sum_over, kind=direction)]           
+                                             variable_name=['{}_Expected Number of Deaths'.format(dike) for dike in function.dikelist],
+                                             function=sum_over,
+                                             kind=direction)
+                              ]           
 
     # 3-objectives PF:
     elif problem_formulation_id == 1:
@@ -133,10 +141,10 @@ def get_model_for_problem_formulation(problem_formulation_id):
         
         for dike in function.dikelist:
             outcomes.append(ScalarOutcome('{} Total Costs'.format(dike),
-                              variable_name = ['{}_{}'.format(dike, e) 
-                                     for e in ['Expected Annual Damage', 
-                                               'Dike Investment Costs']],
-                                      function=sum_over, kind=direction))
+                                          variable_name = ['{}_{}'.format(dike, e)
+                                                           for e in ['Expected Annual Damage', 'Dike Investment Costs']],
+                                          function=sum_over,
+                                          kind=direction))
             
             outcomes.append(ScalarOutcome('{}_Expected Number of Deaths'.format(dike),
                                           kind=direction))
